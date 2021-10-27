@@ -2,15 +2,15 @@
 % Please edit documentation in R/plot_treatment.R
 \name{plot_hist}
 \alias{plot_hist}
-\title{Plot a histogram of variables}
+\title{Plot a histogram}
 \usage{
-plot_hist(tmp, pfsdycr)
+plot_hist(cleaned_data, pfsdycr)
 }
 \arguments{
-\item{tmp}{a dataframe with target variables}
+\item{cleaned_data}{a cleaned data with specific variables}
 
 \item{var}{the target variable}
 }
 \description{
-TODO: add this later
+Plot the histogram pf the variable named "pfsdycr", to find the correlation between treatment group and experiment group
 }

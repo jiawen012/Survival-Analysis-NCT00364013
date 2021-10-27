@@ -7,7 +7,7 @@
 plot_trt(plot_data, v1, v2)
 }
 \arguments{
-\item{plot_data}{a cleaned data with important variables}
+\item{plot_data}{a cleaned data with specific variables}
 
 \item{v1}{a variable on x axis}
 

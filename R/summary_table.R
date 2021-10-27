@@ -6,7 +6,7 @@
 #'
 #' @return a summary table
 #' @export
-#' @examples dl<-data(dl);summary_table(dl)
+#' @examples summarize_table(data_cleaned)
 #'
 summarize_table <- function(data_cleaned) {
   df <- as.data.frame(data_cleaned)

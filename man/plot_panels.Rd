@@ -7,7 +7,7 @@
 plot_panels(plot_data)
 }
 \arguments{
-\item{plot_data}{a cleaned data with important variables}
+\item{plot_data}{a cleaned data with specific variables}
 }
 \description{
 In hw1, this function is used to plot the correlations among all variables in tmp data
