@@ -1,0 +1,616 @@
+---
+title: "Assignment 1"
+author: "Weijin Zou, Jiawen Chen, Ji Qi"
+date: "10/3/2021"
+output:
+  pdf_document: default
+  html_document: default
+editor_options:
+  markdown:
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+```
+
+## Summary
+
+**Structure of the document:**
+
+1.  A description of the study
+2.  Load data and packages
+3.  Exploratory Data Analysis
+4.  Intuition about the survival theories
+5.  Kaplan-Meier Analytics
+6.  Cox proportional hazard models
+7.  Conclusion\
+
+## 1. A description of the study
+
+The primary purpose of the study is to assess whether panitumumab in
+combination with infusional 5-fluorouracil, leucovorin, and oxaliplatin
+(FOLFOX) chemotherapy improves progression-free survival (PFS) compared
+to FOLFOX alone as first-line therapy for metastatic colorectal cancer
+(mCRC) among subjects with wild-type KRAS tumors (subjects whose tumors
+contain nonmutated KRAS) and subjects with mutant KRAS tumors. In this
+study, participants are randomized in a 1:1 ratio to first-line therapy
+consisting of either:
+
+• Arm 1(test): FOLFOX with panitumumab or
+
+• Arm 2(standard): FOLFOX alone
+
+Subjects will complete an EQ-5D every 4 weeks ± 1 week, starting at
+baseline and continuing while receiving assigned study treatment until
+disease progression and once at the safety followup visit. If withdrawal
+from assigned study treatment occurs prior to disease progression (eg
+due to unacceptable toxicities) subjects should continue to complete the
+EQ-5D every 8 weeks ± 1 week until disease progression. Researchers did
+primary analysis, safety interim analyses and efficacy interim analyses
+in this study to evaluate the combined drug efficiency.
+
+Here are our answers to the questions in assignment requirements, and
+all the questions in assignment will be marked in bold font.
+
+**What was the purpose of the study?**
+
+Primary Objective: To assess whether panitumumab in combination with
+infusional 5-fluorouracil, leucovorin, and oxaliplatin (FOLFOX)
+chemotherapy improves progression-free survival (PFS) compared to FOLFOX
+alone as first-line therapy for metastatic colorectal cancer (mCRC)
+among subjects with wild-type KRAS tumors (subjects whose tumors contain
+nonmutated KRAS) and subjects with mutantKRAS tumors.
+
+Secondary Objectives: To evaluate whether panitumumab in combination
+with infusional 5-fluorouracil, leucovorin, and FOLFOX chemotherapy
+improves Overall Survival (OS) compared to FOLFOX alone as first-line
+therapy for metastatic colorectal cancer (mCRC) among subjects with
+wild-type KRAS tumors.
+
+## 2. Load data and packages
+
+```{r}
+library(haven)
+library(dplyr)
+library(tibble)
+library(purrr)
+library(tidyr)
+library(ggplot2)
+library(dummies)
+library(trelliscopejs)
+fns <- dir("NCT00364013")
+fns <- fns[grep("sas7bdat", fns)]
+dl <- map(fns, ~ read_sas(file.path("NCT00364013", .x)))
+prefix <- gsub(".sas7bdat", "", fns)
+names(dl) <- prefix
+num = length(dl$adsl_pds2019$SUBJID)
+print(paste("Number of patients:",unique(dl$adsl_pds2019$SUBJID) %>% length()))
+print(table(dl$adsl_pds2019$ATRT))
+```
+
+-   **How many people were enrolled**? The distinctive participants in
+    the experiment is **935**.
+
+-   **Is the treatment data available or is it just standard of care?**
+    Yes, the treatment data is available since there is a control group.
+    To be more specific, eligible subjects are randomized in an almost
+    1:1 ratio to first-line therapy consisting of either:
+
+    -   **Arm 1(468 patients, test group): FOLFOX with panitumumab;**
+
+    -   **Arm 2(467 patients, standard group): FOLFOX alone.**
+
+Then we clean the clinical trial data as follows:
+
+```{r}
+#id = dl$adsl_pds2019$SUBJID
+atrt = dummy(dl$adsl_pds2019$ATRT)
+prsurg = dummy(dl$adsl_pds2019$PRSURG)
+dth = dl$adsl_pds2019$DTH
+age = dl$adsl_pds2019$AGE
+dthdy = dl$adsl_pds2019$DTHDY
+sex = dummy(dl$adsl_pds2019$SEX)
+trt = dl$adsl_pds2019$TRT
+ecog = dummy(dl$adsl_pds2019$B_ECOG)
+pfscr =dl$adsl_pds2019$PFSCR
+pfsdycr = dl$adsl_pds2019$PFSDYCR
+colo <- data.frame(
+  atrt=atrt,
+  dthdy = dthdy,
+  dth = dth,
+  prsurg = prsurg,
+  age = age,
+  sex = sex,
+  ecog = ecog,
+  pfscr = pfscr,
+  pfsdycr = pfsdycr
+)
+data_cleaned = cbind(atrt, dthdy, prsurg, dth, age, sex, trt, ecog, pfscr, pfsdycr)
+```
+
+```{r load-packages, message=FALSE, warning=FALSE}
+library(survival); library(survminer); library(ranger); library(ggplot2); library(dplyr); library(ggfortify); library(psych)
+```
+
+## 3. Exploratory data analysis
+
+```{r}
+df <- as.data.frame(data_cleaned)
+df <- as.data.frame(lapply(df, as.factor))
+df <- transform(df, age = as.numeric(age), dthdy = as.numeric(dthdy), pfsdycr = as.numeric(pfsdycr))
+summary(df)
+```
+
+From the brief summary we can see that:
+
+-   61.93% of patients are women;
+
+-   73.8% of patients died before the end; of the study, and the mean of
+    survival period is 331.4;
+
+-   Age ranges from 1 to 58 years old ;
+
+-   90.05% of the subjects had a prior surgery ;
+
+-   Patient status: 55.61% of the subjects are fully active, 5.92% of
+    the subjects are in bed less than 50% of their time, and 39.36% of
+    the subjects have symptoms but ambulatory.
+
+To get a basic sense of the relationship among different variables, we
+drew the following graph.
+
+```{r}
+height = dl$adsl_pds2019$B_HEIGHT
+weight = dl$adsl_pds2019$B_WEIGHT
+race = dl$adsl_pds2019$RACE
+tmp <- data.frame(
+  #dth =dth,
+  dthdy = dthdy,
+  trt = trt,
+  atrt = atrt[,1],
+  race = race,
+  age = age,
+  weight = weight,
+  height = height,
+  pfsdycr = pfsdycr
+)
+#tmp$dth <- factor(tmp$dth, labels = c("alive", "death"))
+tmp$race<-factor(tmp$race,labels=c(''))
+tmp$trt<-factor(tmp$trt,labels=c('standard','test'))
+```
+
+```{r}
+ggplot(tmp, aes(pfsdycr,dthdy, color = trt))+geom_point()+labs(color=c('treatment group'))
+```
+
+```{r}
+pairs.panels(tmp[,-2],pch = 21,bg=c("red","purple")[unclass(tmp$trt)],main='Distribution/correlation in multible variables in two groups')+geom_point()
+#rm(tmp)
+```
+
+We explored the relationship between the experimental group's and the
+control group's dthdy, race, age, weight, height and pfsdycr. The upper
+right part contains correlation values, graphs on the diagonal line is
+the data distribution histograms, and the lower left part shows the
+corresponding scatter plots. The red and purple points are the data of
+the experimental group and the control group respectively. From the
+figure, we could see that there is no correlation between other
+variables except for the dthdy and pfs.
+
+Below we will begin to analyze the dthdy and pfs(progression-free
+survival) of the two groups.
+
+```{r}
+fig1 = ggplot(data = tmp, aes(x = pfsdycr, fill = atrt)) + 
+  geom_histogram(bins = 30) + 
+  labs(fill=c('treatment group')) 
+fig1 = fig1 + facet_grid(atrt ~.) + 
+  ggtitle("Figure 1. Distribution of pfs day by type of treatment")
+fig1
+```
+
+```{r}
+ggplot(data = tmp, aes(x = dthdy, fill = atrt)) + 
+  geom_histogram(bins = 30) + 
+  labs(fill=c('treatment group')) +
+  facet_grid(atrt ~.) + 
+  ggtitle("Figure 2. Distribution of death day by type of treatment")
+```
+
+We noticed that there isn't clear difference in PFS days and death days
+between test or standard treatment groups. Also, we did not find any
+significant difference in death days between test or standard treatment
+groups.
+
+**State a concise hypothesis?**
+
+Our hypothesis is that:
+
+Panitumumab with FOLFOX chemotherapy **DOES NOT** improve
+progression-free survival (PFS) and Overall Survival (OS) rate compared
+to FOLFOX alone as first-line therapy for metastatic colorectal cancer
+(mCRC) among subjects with wild-type KRAS tumors (subjects whose tumors
+contain nonmutated KRAS) and subjects with mutantKRAS tumors.
+
+Here, we plan to use survival analysis tools to test our hypothesis as
+follows.
+
+## 4. Survival analysis
+
+Survival analysis helps when the time element (an event occuring) is
+taken into account. We want to estimate the time to reach a specific
+event with survival analysis. In our study, if there is no obvious
+difference in estimated progression-free survival and overall survival
+signal between Arm1 and Arm2, then our hypothesis is TRUE.
+
+### 4.1. Event
+
+The event is the endpoint in the study, the specific outcome we want to
+measure. In our study what we want to estimate is the death or survival
+situations among patients in arm1 or arm2.
+
+### 4.2. Censored Data
+
+This refers to incomplete data, the event did not occur for a subject
+during the time of the study, there are several cases:
+
+-   Patient did not experience any event during the study, and we do not
+    know if the event occured (for instance, we do not know if the
+    patient ultimately survived or not after the study).
+
+-   Right censored subjects: the patient withdrew from the trial or data
+    is lost for some reason (follow-up didn't occur on the patient, or
+    the patient experienced a different event).
+
+All patients not experiencing the event during the time of the study
+will be censored at the latest recorded time point.
+
+### 4.3 Kaplan-Meier
+
+**Main purpose: visualzing survival curves, works well with categorical
+data, for numerical data we'll use the Cox proportional hazard models.**
+
+Kaplan-Meier statistic measures the probability that a patient will
+survive past a specific point in time. At $t = 0$, the statistic is 1
+(or 100%). When $t$ increases infinitely, the statistic becomes 0.
+
+The plot of the KM estimator is a series of decreasing horizontal steps,
+approaching the true survival function.
+
+The **survival probability** of surviving after time = t is noted
+$S(t)$. It is the product of all the prior survival probabilities up to
+time = t.
+
+$$S(t=n) = S(t=1) \times S(t=2) … \times S(t=n-1)$$
+
+The basic formula is:
+$$\LARGE \hat{S}(t) = \prod_{i: t_i <= t} (1-\frac{d_i}{n_i})$$
+
+$t(i)$ is a time when at least an event happened, $d(i)$ is the number
+of events (death or recurring disease for instance), that happened at
+time $t(i)$, $n(i)$ is the number of of individuals that survive (did
+not have an event or where not censored).\
+Source: <https://en.wikipedia.org/wiki/Kaplan%E2%80%93Meier_estimator>
+
+This is based on conditional probabilities, each new proportion
+conditional on the previous proportions.
+
+### 4.4. Log-Rank Test
+
+This test is performed on the curves of the Kaplan-Meier method.\
+For two (or more) different survival curves, it tests the null
+hypothesis that both curves are equal. If the p-value is below the
+significance level (generally $alpha = 0.05$), then we have convincing
+statistical evidence that at least two curves differ.
+
+### 4.5. Cox proportional hazard models
+
+**Main purpose: describing the simultaneous effect of several variables
+on the rate of a particular event happening at a specific point in
+time.**
+
+The Cox model is defined with the hazard function, $h(t)$: it describes
+the probability of a hazard of a subject to survive to time = $t$. The
+function returns a proportion, from 0 to 1.
+
+It measures the instanteous risk of death. It has a memory-less
+property, the likelihood of something happening at time = $t$ has no
+relation to what happened in the past. The function at year y applies to
+all subjects alive that year, without taking into account who died in
+previous years.
+
+Covariates are the predictors we use in the model that looks pretty much
+like a multiple linear regression.
+
+Hazard function:
+
+$$h(t) = h_0(t) * exp(b_1x_1 * b_2x_2 * ... * b_n x_n)$$
+
+-   $t$ = survival time\
+-   $h(t)$ = hazard function taking as arguments n covariates noted
+    $x_{1}$ to $x_{n}$\
+-   $b_{1}, …, b_{n}$ = coefficients or weights of each covariate\
+-   $h_{0}$ = baseline hazard, i.e. value of the hazard when all x's are
+    equal to zero.
+-   Hazard ratios ($\log(b)$) are noted HR:\
+    if $HR = 1$: no effect\
+    if $HR < 1$: reduction in hazard, we call the associated covariate a
+    good prognostic factor\
+    if $HR > 1$: increase in hazard, we call the associated covariate a
+    bad prognostic factor
+
+### 4.6. Difference between survival and hazard functions
+
+The survivor function describes the probability of "not having an
+event", whereas the hazard function describes the probability of the
+event occurring.
+
+The survival function is the probability that a subject survives from
+the time origin of the study to a specified future time $t$.
+
+The hazard function is the probability that a subject under observation
+at a time $t$ has an event at that time.
+
+## 5. Kaplan-Meier Analytics
+
+We want to fit a survival curve for time until the event on the x-axis
+and status on the y-axis, with an explanatory variable like gender, type
+of treatment, ...
+
+### 5.1. Fitting a Kaplan-Meier Model
+
+We use the `survfit()` function from the survival package, in
+combination with the `Surv()` function, which provides a survival object
+containing failure time and censoring information.
+
+In this first example, we use the treatment class (standard or test):
+
+```{r}
+fit1 <- survfit(Surv(dthdy, dth) ~ atrt, data=tmp)
+summary(fit1)$table
+```
+
+```{r}
+# pfs
+fit2 <- survfit(Surv(pfsdycr, pfscr) ~ atrt, data=tmp)
+summary(fit2)$table
+```
+
+The short summary above shows that test treatment group has 403 events
+and standard group has 408 events, with a median survival time of 275
+days for the test treatment group and 279 days for the standard group.
+403 vs. 408 events, 275 vs. 279 pfs days, from which we almost cannot
+tell the difference in PFS and OS between test treatment group and
+standard treatment group!
+
+However, we need to visualize our model and calculate the p-value to
+further illustrate and test our hypothesis, as shown in the following
+section.
+
+### 5.2. Visualizing the model
+
+`ggsurvplot()` from Survminer offers more options in just one plot:
+
+```{r}
+p <- ggsurvplot(
+  fit1,                     #survival model we want to plot 
+  pval = TRUE,              #displays p-value of log-rank test, if p-value < 0.05, then the difference between the two curves are statistically significant
+  conf.int = TRUE,          #plots a confidence interval for each curve
+  xlab = "Time in days",
+  break.time.by = 150,      # break X axis in time intervals by 100.
+  ggtheme = theme_light(),  # customize theme with a grid for better readability 
+  risk.table = "abs_pct",   # absolute number and percentage at risk
+  risk.table.y.text.col = T,# colour risk table text annotations
+  risk.table.y.text = FALSE,# show bars instead of names in text annotations
+                            # in legend of risk table.
+  ncensor.plot = TRUE,      # plot the number of censored subjects at time t
+  surv.median.line = "hv"   # add the median survival pointer
+)
+print(p$plot)
+```
+
+```{r}
+p <- ggsurvplot(
+  fit2,                     #survival model we want to plot 
+  pval = TRUE,              #displays p-value of log-rank test, if p-value < 0.05, then the difference between the two curves are statistically significant
+  conf.int = TRUE,          #plots a confidence interval for each curve
+  xlab = "Time in days",
+  break.time.by = 150,      # break X axis in time intervals by 100.
+  ggtheme = theme_light(),  # customize theme with a grid for better readability 
+  risk.table = "abs_pct",   # absolute number and percentage at risk
+  risk.table.y.text.col = T,# colour risk table text annotations
+  risk.table.y.text = FALSE,# show bars instead of names in text annotations
+                            # in legend of risk table.
+  ncensor.plot = TRUE,      # plot the number of censored subjects at time t
+  surv.median.line = "hv"   # add the median survival pointer
+)
+print(p$plot)
+```
+
+Interpretation:
+
+-   The x-axis represents **the survival time in days**.
+
+-   The y-axis shows **the probability of survival time**, related to
+    the number of days on the x-axis.
+
+-   Each event (death in this case) is shown by a vertical drop of the
+    curve.\
+    Vertical ticks (although hardly noticeable on the plot) show a
+    censored patient.
+
+-   The curve always start at 1 (no events occured or in this case all
+    patients are alive), then decreases and if the study would last
+    infinitely, the curve would tend towards 0 (no subjects left due to
+    event or censoring).
+
+-   The **p-value=0.76 in PFS estimation model and p-value=0.57 in OS
+    estimation model**, which are both extremely high, we fail to reject
+    the null hypothesis that both curves are different.
+
+-   In our hypothesis, there is no statistical evidence that both curves
+    are different or, the treatment type doesn't impact the survival
+    time, i.e. our hypothesis holds.
+
+-   Like stated earlier and visible here, the median survival time (the
+    point where survival probability is 0.5) for standard treatment is
+    279 days, against only 275 days for the test treatment. There is no
+    statistical evidence that both curves are different.
+
+### 5.3. Transforming the survival curve
+
+There is another major argument of the `ggsurvplot()` function, `fun`,
+which proposes alternative transformations:
+
+-   "log": log transformation of the survivor function,\
+
+```{r}
+p <- ggsurvplot(fit1,
+          conf.int = TRUE,
+          ggtheme = theme_bw(), 
+          fun = "log")
+print(p$plot)
+```
+
+```{r}
+p <- ggsurvplot(fit2,
+          conf.int = TRUE,
+          ggtheme = theme_bw(), 
+          fun = "log")
+print(p$plot)
+```
+
+-   "event": plots cumulative events ($f(y) = 1-y$). It's also known as
+    the cumulative incidence,\
+
+```{r}
+p <- ggsurvplot(fit1,
+          conf.int = TRUE,
+          ggtheme = theme_bw(), 
+          fun = "event")
+print(p$plot)
+```
+
+```{r}
+p <- ggsurvplot(fit2,
+          conf.int = TRUE,
+          ggtheme = theme_bw(), 
+          fun = "event")
+print(p$plot)
+```
+
+-   "cumhaz" plots the cumulative hazard function $f(y) = -log(y)$\
+    The cumulative hazard is commonly used to estimate the hazard
+    probability.\
+    It's defined as $H(t)=log(S(t))$. The cumulative hazard $H(t)$ can
+    be interpreted as the cumulative force of mortality. In other words,
+    it corresponds to the number of events that would be expected for
+    each individual by time $t$ if the event were a repeatable process.\
+
+```{r}
+p <- ggsurvplot(fit1,
+          conf.int = TRUE,
+          ggtheme = theme_bw(), 
+          fun = "cumhaz")
+print(p$plot)
+```
+
+```{r}
+p <- ggsurvplot(fit2,
+          conf.int = TRUE,
+          ggtheme = theme_bw(), 
+          fun = "cumhaz")
+print(p$plot)
+```
+
+## 6. Cox proportional hazard models
+
+### 6.1. Fitting a Cox Model
+
+We use the `coxph()` function from the survival package.
+
+**Fit univariate model**
+
+```{r}
+fit_cox_uni1 <- coxph(Surv(dthdy, dth) ~ atrt, data = colo)
+summary(fit_cox_uni1)
+```
+
+```{r}
+fit_cox_uni2 <- coxph(Surv(pfsdycr, pfscr) ~ atrt, data = colo)
+summary(fit_cox_uni2)
+```
+
+Interpreting the summary output:
+
+-   **The "z" column gives the Wald statistic value** (ratio of each
+    regression coefficient to its standard error ($z = coef/SE(coef)$).
+    The wald statistic evaluates, whether the beta coefficient of a
+    given variable is statistically significantly different from 0. With
+    $z = 0.755$ and $p = 0.569$, type of treatment doesn't have any
+    statistically significant coefficients.
+
+**It the regression coefficients (coef) has a positive sign**, the
+hazard (risk of death) is higher, i.e. the prognosis is worse, for
+subjects with higher values of that variable. The output gives the
+hazard ratio (HR) for the second group relative to the first group, that
+is, test treatment versus standard. The beta coefficient for atrt = 0.02
+and 0.04 indicates that test patients have higher risk of death (higher
+survival rates) than standard patients. But let's keep in mind that the
+p-value was high and the variable itself is not statistically
+significant.
+
+**Hazard ratios** , that is the exponentiated coefficients noted 1.02
+and 1.04, give the effect size of the covariates. For example, having
+test treatment increases the hazard by a factor of 1.02 and 1.04.
+
+**The global statistical significance of the model** gives p-values for
+three tests: likelihood-ratio test, Wald test, and score logrank. These
+three methods test the null hypothesis that all beta va;ues are zero and
+are asymptotically equivalent. For large n, they return similar results.
+For small n, we use the likelihood ratio test.
+
+**Fit multivariate model**
+
+```{r}
+fit_cox_multi1 <- coxph(Surv(pfsdycr, pfscr) ~ ., data = colo)
+summary(fit_cox_multi1)
+```
+
+```{r}
+fit_cox_multi2 <- coxph(Surv(pfsdycr, pfscr) ~ ., data = colo)
+summary(fit_cox_multi2)
+```
+
+The 3 p-values of the global statistical significance are similar and
+show that the model is statistically significant (p-value \< 0.05).
+
+At last, let's see the survival curves in test treatment group and
+standard treatment group under Cox proportional hazard models, which are
+also quite similar.
+
+```{r}
+p <- ggsurvplot(survfit(fit_cox_multi1, data = colo), ggtheme = theme_minimal())
+print(p$plot)
+```
+
+```{r}
+p <- ggsurvplot(survfit(fit_cox_multi2, data = colo), ggtheme = theme_minimal())
+print(p$plot)
+```
+
+## 7. Conclusion
+
+After brief exploratory analysis using tables, visualizations and
+analysis under two survival analysis models. We can say that our
+hypothesis:
+
+> Panitumumab with FOLFOX chemotherapy **DOES NOT** improve
+> progression-free survival (PFS) and Overall Survival (OS) rate
+> compared to FOLFOX alone as first-line therapy for metastatic
+> colorectal cancer (mCRC) among subjects with wild-type KRAS tumors
+> (subjects whose tumors contain nonmutated KRAS) and subjects with
+> mutantKRAS tumors.
+
+is **CORRECT**.
