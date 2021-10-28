@@ -8,7 +8,7 @@
 #' @export
 #' @examples survival_fit(tmp)
 #'
-survival_fit <- function(tmp){
+survival_fit <- function(tmp, pfsdycr = "pfsdycr", pfscr = "pfscr", atrt = "atrt"){
   fit <- survfit(Surv(pfsdycr, pfscr) ~ atrt, data=tmp)
   print(summary(fit)$table)
   return(fit)
@@ -56,7 +56,7 @@ plot_survival <- function(fit){
 #' @export
 #' @examples summarize_cox(tmp)
 
-summarize_cox <- function(tmp){
+summarize_cox <- function(tmp, pfsdycr = "pfsdycr", pfscr = "pfscr", atrt = "atrt"){
   fit_cox_uni <- coxph(Surv(pfsdycr, pfscr) ~ atrt, data = tmp)
   summary(fit_cox_uni)
   return(fit_cox_uni)

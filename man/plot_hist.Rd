@@ -4,7 +4,7 @@
 \alias{plot_hist}
 \title{Plot a histogram}
 \usage{
-plot_hist(cleaned_data)
+plot_hist(cleaned_data, pfsdycr = "pfsdycr", atrt = "atrt")
 }
 \arguments{
 \item{cleaned_data}{a cleaned data with specific variables}

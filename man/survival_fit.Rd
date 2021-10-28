@@ -4,7 +4,7 @@
 \alias{survival_fit}
 \title{Make a survival analysis model}
 \usage{
-survival_fit(tmp)
+survival_fit(tmp, pfsdycr = "pfsdycr", pfscr = "pfscr", atrt = "atrt")
 }
 \arguments{
 \item{tmp}{a dataframe with target variables}

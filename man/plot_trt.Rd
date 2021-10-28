@@ -4,7 +4,7 @@
 \alias{plot_trt}
 \title{Plot variables}
 \usage{
-plot_trt(plot_data)
+plot_trt(plot_data, pfsdycr = "pfsdycr", dthdy = "dthdy", trt = "trt")
 }
 \arguments{
 \item{plot_data}{a cleaned data with specific variables}

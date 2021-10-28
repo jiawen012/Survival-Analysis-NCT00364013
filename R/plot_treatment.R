@@ -7,7 +7,7 @@
 #' @export
 #' @examples plot_trt(tmp)
 #'
-plot_trt <- function(plot_data)
+plot_trt <- function(plot_data, pfsdycr = "pfsdycr", dthdy = "dthdy", trt = "trt")
 {
   ggplot(plot_data, aes(pfsdycr, dthdy, color = trt))+geom_point()
 }
@@ -36,7 +36,7 @@ plot_panels <- function(plot_data){
 #' @export
 #' @examples plot_hist(tmp)
 #'
-plot_hist <- function(cleaned_data){
+plot_hist <- function(cleaned_data, pfsdycr = "pfsdycr", atrt = "atrt"){
   ggplot(data = cleaned_data, aes(x = pfsdycr, fill = atrt)) +
     geom_histogram(bins = 30) +
     labs(fill=c('treatment group')) +

@@ -5,7 +5,7 @@
 #' @export
 #' @examples summarize_table(data_cleaned)
 #'
-summarize_table <- function(data_cleaned) {
+summarize_table <- function(data_cleaned, age = "age", dthdy = "dthdy", pfsdycr = "pfsdycr") {
   df <- as.data.frame(data_cleaned)
   df <- as.data.frame(lapply(df, as.factor))
   df <- transform(df, age = as.numeric(age), dthdy = as.numeric(dthdy), pfsdycr = as.numeric(pfsdycr))
