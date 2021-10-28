@@ -8,6 +8,10 @@ plot_hist(cleaned_data, pfsdycr = "pfsdycr", atrt = "atrt")
 }
 \arguments{
 \item{cleaned_data}{a cleaned data with specific variables}
+
+\item{pfsdycr}{default}
+
+\item{atrt}{default}
 }
 \description{
 Plot the histogram pf the variable named "pfsdycr", to find the correlation between treatment group and experiment group

@@ -8,6 +8,12 @@ survival_fit(tmp, pfsdycr = "pfsdycr", pfscr = "pfscr", atrt = "atrt")
 }
 \arguments{
 \item{tmp}{a dataframe with target variables}
+
+\item{pfsdycr}{default}
+
+\item{pfscr}{default}
+
+\item{atrt}{default}
 }
 \value{
 A survival fit model

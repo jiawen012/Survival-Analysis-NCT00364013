@@ -2,6 +2,9 @@
 #'
 #' @description use "survfit" to train the model and summary the result table
 #' @param tmp a dataframe with target variables
+#' @param atrt default
+#' @param pfscr default
+#' @param pfsdycr default
 #' @export
 #' @importFrom survival survfit Surv
 #' @return A survival fit model
@@ -48,6 +51,9 @@ plot_survival <- function(fit){
 #'
 #' @description print a cox result
 #' @param tmp tmp data from this package
+#' @param atrt default
+#' @param pfscr default
+#' @param pfsdycr default
 #' @export
 #' @importFrom survminer ggsurvplot
 #' @importFrom survival survfit Surv coxph

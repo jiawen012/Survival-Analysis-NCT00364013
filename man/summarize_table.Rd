@@ -13,6 +13,12 @@ summarize_table(
 }
 \arguments{
 \item{data_cleaned}{a cleaned data with important variables (usually you can directly use the "dl" data from this package)}
+
+\item{age}{default}
+
+\item{dthdy}{default}
+
+\item{pfsdycr}{default}
 }
 \value{
 a summary table

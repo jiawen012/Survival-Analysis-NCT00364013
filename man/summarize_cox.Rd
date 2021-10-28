@@ -8,6 +8,12 @@ summarize_cox(tmp, pfsdycr = "pfsdycr", pfscr = "pfscr", atrt = "atrt")
 }
 \arguments{
 \item{tmp}{tmp data from this package}
+
+\item{pfsdycr}{default}
+
+\item{pfscr}{default}
+
+\item{atrt}{default}
 }
 \value{
 univariate cox fit model

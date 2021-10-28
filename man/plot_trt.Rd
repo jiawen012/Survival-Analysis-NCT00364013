@@ -8,6 +8,12 @@ plot_trt(plot_data, pfsdycr = "pfsdycr", dthdy = "dthdy", trt = "trt")
 }
 \arguments{
 \item{plot_data}{a cleaned data with specific variables}
+
+\item{pfsdycr}{default}
+
+\item{dthdy}{default}
+
+\item{trt}{default}
 }
 \description{
 In hw1, this function is used to explore relationships between pfsdycr and dthdy

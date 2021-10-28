@@ -2,6 +2,9 @@
 #'
 #' @description In hw1, this function is used to explore relationships between pfsdycr and dthdy
 #' @param plot_data a cleaned data with specific variables
+#' @param trt default
+#' @param dthdy default
+#' @param pfsdycr default
 #' @importFrom ggplot2 ggplot aes geom_line geom_point
 #' theme_minimal
 #' @export
@@ -30,6 +33,8 @@ plot_panels <- function(plot_data){
 #'
 #' @description Plot the histogram pf the variable named "pfsdycr", to find the correlation between treatment group and experiment group
 #' @param cleaned_data a cleaned data with specific variables
+#' @param pfsdycr default
+#' @param atrt default
 #' @export
 #' @importFrom ggplot2 ggplot aes geom_line geom_point
 #' theme_minimal geom_histogram labs facet_grid
