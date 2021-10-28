@@ -4,13 +4,15 @@
 \alias{plot_hist}
 \title{Plot a histogram}
 \usage{
-plot_hist(cleaned_data, pfsdycr)
+plot_hist(cleaned_data)
 }
 \arguments{
 \item{cleaned_data}{a cleaned data with specific variables}
-
-\item{var}{the target variable}
 }
 \description{
 Plot the histogram pf the variable named "pfsdycr", to find the correlation between treatment group and experiment group
+}
+\examples{
+plot_hist(tmp)
+
 }

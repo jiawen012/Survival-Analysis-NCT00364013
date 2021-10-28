@@ -13,5 +13,6 @@ plot_panels(plot_data)
 In hw1, this function is used to plot the correlations among all variables in tmp data
 }
 \examples{
-tmp<-data(tmp);plot_panels(tmp)
+plot_panels(tmp)
+
 }

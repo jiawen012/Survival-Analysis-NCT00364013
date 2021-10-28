@@ -4,18 +4,15 @@
 \alias{plot_trt}
 \title{Plot variables}
 \usage{
-plot_trt(plot_data, v1, v2)
+plot_trt(plot_data)
 }
 \arguments{
 \item{plot_data}{a cleaned data with specific variables}
-
-\item{v1}{a variable on x axis}
-
-\item{v2}{a variable on y axis}
 }
 \description{
 In hw1, this function is used to explore relationships between pfsdycr and dthdy
 }
 \examples{
-tmp<-data(tmp);plot_trt(tmp,pfsdycr,dthdy)
+plot_trt(tmp)
+
 }
