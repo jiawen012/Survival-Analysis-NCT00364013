@@ -4,10 +4,10 @@
 \alias{summarize_cox}
 \title{print a cox result}
 \usage{
-summarize_cox(tmp, pfsdycr = "pfsdycr", pfscr = "pfscr", atrt = "atrt")
+summarize_cox(tmp_d, pfsdycr = "pfsdycr", pfscr = "pfscr", atrt = "atrt")
 }
 \arguments{
-\item{tmp}{tmp data from this package}
+\item{tmp_d}{tmp data from this package}
 
 \item{pfsdycr}{default}
 

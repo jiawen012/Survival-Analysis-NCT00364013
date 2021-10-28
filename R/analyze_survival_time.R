@@ -50,7 +50,7 @@ plot_survival <- function(fit){
 #' @title print a cox result
 #'
 #' @description print a cox result
-#' @param tmp tmp data from this package
+#' @param tmp_d tmp data from this package
 #' @param atrt default
 #' @param pfscr default
 #' @param pfsdycr default
@@ -62,8 +62,8 @@ plot_survival <- function(fit){
 #' @export
 #' @examples summarize_cox(tmp)
 
-summarize_cox <- function(tmp, pfsdycr = "pfsdycr", pfscr = "pfscr", atrt = "atrt"){
-  fit_cox_uni <- coxph(Surv(pfsdycr, pfscr) ~ atrt, data = tmp)
+summarize_cox <- function(tmp_d, pfsdycr = "pfsdycr", pfscr = "pfscr", atrt = "atrt"){
+  fit_cox_uni <- coxph(Surv(pfsdycr, pfscr) ~ atrt, data = tmp_d)
   summary(fit_cox_uni)
   return(fit_cox_uni)
 }

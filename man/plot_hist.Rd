@@ -4,10 +4,10 @@
 \alias{plot_hist}
 \title{Plot a histogram}
 \usage{
-plot_hist(cleaned_data, pfsdycr = "pfsdycr", atrt = "atrt")
+plot_hist(dt, pfsdycr = "pfsdycr", atrt = "atrt")
 }
 \arguments{
-\item{cleaned_data}{a cleaned data with specific variables}
+\item{dt}{a cleaned data with specific variables}
 
 \item{pfsdycr}{default}
 

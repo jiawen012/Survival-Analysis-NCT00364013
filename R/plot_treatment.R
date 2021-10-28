@@ -32,7 +32,7 @@ plot_panels <- function(plot_data){
 #' @title Plot a histogram
 #'
 #' @description Plot the histogram pf the variable named "pfsdycr", to find the correlation between treatment group and experiment group
-#' @param cleaned_data a cleaned data with specific variables
+#' @param dt a cleaned data with specific variables
 #' @param pfsdycr default
 #' @param atrt default
 #' @export
@@ -41,8 +41,8 @@ plot_panels <- function(plot_data){
 #' @export
 #' @examples plot_hist(tmp)
 #'
-plot_hist <- function(cleaned_data, pfsdycr = "pfsdycr", atrt = "atrt"){
-  ggplot(data = cleaned_data, aes(x = pfsdycr, fill = atrt)) +
+plot_hist <- function(dt, pfsdycr = "pfsdycr", atrt = "atrt"){
+  ggplot(data = dt, aes(x = pfsdycr, fill = atrt)) +
     geom_histogram(bins = 30) +
     labs(fill=c('treatment group')) +
     facet_grid(atrt ~.)

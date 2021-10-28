@@ -4,15 +4,10 @@
 \alias{summarize_table}
 \title{summarize our data}
 \usage{
-summarize_table(
-  data_cleaned,
-  age = "age",
-  dthdy = "dthdy",
-  pfsdycr = "pfsdycr"
-)
+summarize_table(dt, age = "age", dthdy = "dthdy", pfsdycr = "pfsdycr")
 }
 \arguments{
-\item{data_cleaned}{a cleaned data with important variables (usually you can directly use the "dl" data from this package)}
+\item{dt}{a cleaned data with important variables (usually you can directly use the "dl" data from this package)}
 
 \item{age}{default}
 
