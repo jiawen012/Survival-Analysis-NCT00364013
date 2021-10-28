@@ -32,7 +32,7 @@ plot_survival <- function(fit){
     conf.int = TRUE,          #plots a confidence interval for each curve
     xlab = "Time in days",
     break.time.by = 150,      # break X axis in time intervals by 100.
-    ggtheme = theme_light(),  # customize theme with a grid for better readability
+    #ggtheme = theme_light(),  # customize theme with a grid for better readability
     risk.table = "abs_pct",   # absolute number and percentage at risk
     risk.table.y.text.col = T,# colour risk table text annotations
     risk.table.y.text = FALSE,# show bars instead of names in text annotations
@@ -50,7 +50,8 @@ plot_survival <- function(fit){
 #' @param tmp tmp data from this package
 #' @export
 #' @importFrom survminer ggsurvplot
-#' @importFrom survival survfit Surv
+#' @importFrom survival survfit Surv coxph
+#'
 #' @return univariate cox fit model
 #' @export
 #' @examples summarize_cox(tmp)
