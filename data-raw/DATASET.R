@@ -77,3 +77,4 @@ tmp$trt<-factor(tmp$trt,labels=c('standard','test'))
 
 usethis::use_data(tmp, overwrite = TRUE)
 
+
