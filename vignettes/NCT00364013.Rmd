@@ -1,5 +1,5 @@
 ---
-title: "homework-1"
+title: "NCT00364013"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{homework-1}
@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-library(homework1)
+library(NCT00364013)
 ```
 
 ## Summary

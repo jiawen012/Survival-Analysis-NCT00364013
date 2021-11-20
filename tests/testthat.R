@@ -1,4 +1,4 @@
 library(testthat)
-library(homework1)
+library(NCT00364013)
 
-test_check("homework1")
+test_check("NCT00364013")
